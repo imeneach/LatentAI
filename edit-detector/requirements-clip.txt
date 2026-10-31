@@ -1,0 +1,4 @@
+# Optional: semantic embeddings (EMBEDDER=clip) and fast search at scale
+torch
+open_clip_torch
+faiss-cpu
