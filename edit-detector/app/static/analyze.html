@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Analysis — Edit Detector</title>
+<meta name="theme-color" content="#0a0a0a" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+@media (max-width:1920px){html{font-size:.833333vw}}
+@media (max-width:1440px){html{font-size:1.111111vw}}
+@media (max-width:1024px){html{font-size:1.5625vw}}
+@media (max-width:640px){html{font-size:4.444444vw}}
+body{background:#fff;color:#111;font-family:'Onest',sans-serif;overflow-x:hidden}
+a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}ul{list-style:none}img{display:block}
+:focus-visible{outline:2px solid #b15f2c;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+svg{width:1em;height:1em;display:block}
+:root{--ink:#0a0a0a;--line:#e6e5e2;--sf:#f1f0ee;--ac:#b15f2c;--a1:#cf8047;--a2:#97501f;--m:#8d8d8d}
+.shell{max-width:88rem;margin-inline:auto;padding-inline:1.25rem}
+@media(min-width:640px){.shell{padding-inline:2rem}}
+.ey{display:inline-flex;align-items:center;gap:.5rem;font-size:.875rem;font-weight:500;color:rgba(17,17,17,.7)}
+.ey:before{content:"";width:.375rem;height:.375rem;border-radius:9999px;background:var(--ac)}
+.ey.l{color:rgba(255,255,255,.7)}.ey.l:before{background:var(--a1)}
+.pb{display:inline-flex;align-items:center;gap:.75rem;border-radius:9999px;padding:.375rem .375rem .375rem 1.5rem;font-size:.875rem;font-weight:500;border:1px solid transparent;transition:transform .35s cubic-bezier(.2,.8,.2,1.5)}
+.pb.nb{padding:.75rem 1.5rem}
+.pb b{width:2.25rem;height:2.25rem;display:grid;place-items:center;border-radius:9999px;font-size:1rem;background:var(--ink);color:#fff}
+.pb.dark{background:var(--ink);color:#fff}.pb.dark b{background:#fff;color:var(--ink)}
+.pb.light{background:var(--sf);color:#111}.pb.out{border-color:var(--line);color:#111}
+@media(hover:hover){.pb:hover{transform:scale(1.04)}}
+.chip{display:inline-flex;border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:9999px;padding:.4rem .9rem;font-size:.8rem}
+.glass{border:1px solid rgba(230,229,226,.8);background:rgba(255,255,255,.6);backdrop-filter:blur(4px);border-radius:.875rem}
+/* header */
+header .shell{display:flex;align-items:center;justify-content:space-between;gap:1.5rem;padding-block:1.25rem}
+.brand{display:flex;align-items:center;gap:.5rem;font-size:1.125rem;font-weight:600;letter-spacing:-.01em;transition:transform .35s cubic-bezier(.2,.8,.2,1.5)}
+.brand:hover{transform:scale(1.04)}.brand svg{font-size:1.25rem;color:var(--ac)}
+.mb{display:inline-flex;align-items:center;gap:.5rem;padding:.5rem 1rem;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.05em}.mb:hover{background:#fff}
+/* layout */
+.top{padding-block:1rem 2rem}.top h1{font-size:2.25rem;font-weight:600;letter-spacing:-.02em;line-height:1;margin-top:.75rem}
+@media(min-width:768px){.top h1{font-size:3rem}}
+.lay{display:grid;grid-template-columns:1fr;gap:1.5rem;padding-bottom:5rem}
+@media(min-width:1024px){.lay{grid-template-columns:5fr 7fr;align-items:start}.fm{position:sticky;top:1.25rem}}
+/* frame */
+.fm{border-radius:2rem;background:var(--ink);color:#fff;padding:.75rem;box-shadow:0 0 0 1px rgba(255,255,255,.05)}
+.fm .bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .75rem .75rem}
+.seg{display:inline-flex;gap:.25rem;border:1px solid rgba(255,255,255,.15);border-radius:9999px;padding:.2rem}
+.seg button{border-radius:9999px;padding:.35rem .85rem;font-size:.75rem;font-weight:500;color:rgba(255,255,255,.65);transition:all .25s}
+.seg button.on{background:#fff;color:var(--ink)}.seg button:disabled{opacity:.3;cursor:default}
+.stage{position:relative;display:grid;place-items:center;min-height:22rem;border-radius:1.5rem;overflow:hidden;background:#161616 repeating-conic-gradient(#1b1b1b 0 25%,#141414 0 50%) 0 0/1.25rem 1.25rem}
+.pic{position:relative;width:fit-content;max-width:100%}
+.pic img{max-width:100%;max-height:68vh;border-radius:.5rem}
+.pic canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:.5rem;pointer-events:none;opacity:.72;image-rendering:auto}
+.fm .meta{display:flex;justify-content:space-between;gap:1rem;padding:.75rem .75rem .5rem;font-size:.75rem;color:rgba(255,255,255,.5)}
+.fm .meta span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.busy{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:rgba(10,10,10,.72);backdrop-filter:blur(6px);font-size:.875rem}
+.busy.on{display:flex}.busy i{display:block;width:12rem;height:1px;background:rgba(255,255,255,.2);overflow:hidden}
+.busy i:after{content:"";display:block;height:100%;width:40%;background:var(--a1);animation:sl 1.1s cubic-bezier(.4,0,.2,1) infinite}
+@keyframes sl{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+/* drop */
+#drop{display:none;border-radius:2rem;background:var(--sf);padding:2rem;margin-bottom:1.5rem}
+#drop.on{display:block}#drop h2{font-size:1.5rem;font-weight:600;letter-spacing:-.01em;margin:.5rem 0 1rem}
+#drop form{margin-top:0}
+form{display:flex;flex-direction:column;gap:1rem}label{display:block;font-size:.75rem;font-weight:500;text-transform:uppercase;letter-spacing:.025em;color:rgba(17,17,17,.5)}
+input[type=file]{display:block;margin-top:.375rem;width:100%;border:1px solid var(--line);background:#fff;border-radius:.875rem;padding:.7rem 1rem;font:inherit;font-size:.875rem;color:#111}
+.err{font-size:.8rem;color:#b3261e;margin-top:.75rem}.err:empty{display:none}
+/* result */
+#res{display:none;flex-direction:column;gap:1.5rem}#res.on{display:flex}
+.sum{border-radius:2rem;background:var(--ink);color:#fff;padding:1.75rem}
+@media(min-width:640px){.sum{padding:2.25rem}}
+.sum h2{margin-top:.75rem;font-size:1.875rem;font-weight:600;letter-spacing:-.02em;line-height:1.05}
+.kp{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:1.75rem}
+.kp b{display:block;font-size:2.25rem;font-weight:600;letter-spacing:-.02em}.kp small{display:block;margin-top:.25rem;font-size:.75rem;color:rgba(255,255,255,.5)}
+.sum ul{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem}
+.wr{margin-top:1rem;font-size:.8rem;color:#f0b48a}
+.tabs{display:flex;flex-wrap:wrap;gap:.5rem}
+.tabs button{border:1px solid var(--line);border-radius:9999px;padding:.6rem 1.25rem;font-size:.875rem;font-weight:500;color:rgba(17,17,17,.7);transition:all .25s}
+.tabs button:hover{background:var(--sf)}.tabs button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.pnl{display:none;border:1px solid var(--line);border-radius:2rem;padding:1.5rem}.pnl.on{display:block}
+@media(min-width:640px){.pnl{padding:2rem}}
+.ph{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1rem}
+.ph h3{font-size:1.25rem;font-weight:600;letter-spacing:-.01em}.ph p{font-size:.8rem;color:rgba(17,17,17,.5);margin-top:.25rem}
+.tg{display:inline-flex;align-items:center;gap:.5rem;font-size:.8rem;color:rgba(17,17,17,.6);cursor:pointer}.tg input{margin:0;width:auto;accent-color:var(--ac)}
+.grp{margin-top:1.5rem}.grp h4{font-size:.75rem;font-weight:400;text-transform:uppercase;letter-spacing:.05em;color:rgba(17,17,17,.4);margin-bottom:.25rem}
+.pr{display:grid;grid-template-columns:8.5rem 1fr 5.5rem;align-items:center;gap:1rem;border-top:1px solid var(--line);padding-block:.8rem;font-size:.875rem}
+.pr:first-of-type{border-top:0}.pr .v{text-align:right;font-variant-numeric:tabular-nums;font-weight:500}.pr .v small{font-weight:400;color:rgba(17,17,17,.4);font-size:.72rem}
+.tr{position:relative;height:.375rem;border-radius:9999px;background:var(--sf)}
+.tr:before{content:"";position:absolute;left:50%;top:-.2rem;bottom:-.2rem;width:1px;background:rgba(17,17,17,.25)}
+.tr .u{position:absolute;top:-.15rem;bottom:-.15rem;border-radius:9999px;background:rgba(177,95,44,.22)}
+.tr .f{position:absolute;top:0;bottom:0;border-radius:9999px;background:linear-gradient(90deg,var(--a2),var(--a1))}
+.pr.z{opacity:.4}
+.txt{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid var(--line);padding-block:.8rem;font-size:.875rem}.txt span:last-child{color:rgba(17,17,17,.6);word-break:break-all;text-align:right}
+.cv{width:100%;border-radius:1.25rem;background:var(--sf);aspect-ratio:1;max-width:34rem;display:block;margin-inline:auto}
+.cc{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1rem;justify-content:center}
+.cc button{display:inline-flex;align-items:center;gap:.5rem;border:1px solid var(--line);border-radius:9999px;padding:.4rem .9rem;font-size:.8rem;font-weight:500}
+.cc button i{width:.6rem;height:.6rem;border-radius:9999px;background:var(--c)}.cc button.off{opacity:.4}
+.src{margin-top:1rem;text-align:center;font-size:.75rem;color:rgba(17,17,17,.45)}
+.hg2{display:grid;grid-template-columns:1fr;gap:1rem}@media(min-width:640px){.hg2{grid-template-columns:1fr 1fr}}
+.hm{border-radius:1.5rem;background:var(--ink);color:#fff;padding:.5rem;text-align:left;transition:transform .35s cubic-bezier(.2,.8,.2,1.4);position:relative}
+@media(hover:hover){.hm:hover{transform:translateY(-4px)}}
+.hm.on{box-shadow:0 0 0 2px var(--a1)}
+.hm canvas{width:100%;display:block;border-radius:1rem;background:#161616}
+.hm div{padding:.6rem .5rem .4rem}.hm b{display:block;font-size:.9rem;font-weight:500}.hm p{font-size:.72rem;color:rgba(255,255,255,.5);margin-top:.15rem}
+.hm .lg{height:.3rem;border-radius:9999px;margin-top:.6rem}.hm .lb{display:flex;justify-content:space-between;font-size:.65rem;color:rgba(255,255,255,.45);margin-top:.25rem}
+.hm .sv{position:absolute;right:1rem;top:1rem;width:2rem;height:2rem;border-radius:9999px;background:rgba(10,10,10,.65);display:grid;place-items:center;font-size:.9rem;color:#fff;opacity:0;transition:opacity .25s}
+.hm:hover .sv,.hm .sv:focus-visible{opacity:1}
+.hnt{margin-top:1rem;font-size:.75rem;color:rgba(17,17,17,.5)}
+.row{display:flex;align-items:center;gap:1rem;border-radius:1.25rem;padding:1.1rem 1rem;transition:all .4s cubic-bezier(.2,.8,.2,1.2);width:100%;text-align:left}
+.row:hover:not(:disabled){background:var(--sf);padding-left:1.5rem}.row:disabled{opacity:.4;cursor:default}
+li+li>.row{border-top:1px solid var(--line);border-radius:0}
+.row h5{font-size:1.125rem;font-weight:500;letter-spacing:-.01em}.row p{font-size:.8rem;color:rgba(17,17,17,.5);margin-top:.15rem}.row>span:first-child{flex:1}
+.row .bg{width:2.5rem;height:2.5rem;display:grid;place-items:center;border-radius:9999px;background:var(--ink);color:#fff;transition:transform .35s cubic-bezier(.2,.8,.2,1.5)}.row:hover:not(:disabled) .bg{transform:translateX(4px)}
+.row em{font-style:normal;font-size:.7rem;font-weight:500;color:rgba(17,17,17,.45);border:1px solid var(--line);border-radius:9999px;padding:.2rem .6rem}
+</style>
+</head>
+<body>
+<header><div class="shell">
+<a class="brand" href="index.html"><span id="lgo" style="display:block"></span>Edit Detector</a>
+<a class="mb glass" href="index.html"><span style="width:.875rem;display:block;transform:rotate(180deg)" id="bk"></span>Back to home</a>
+</div></header>
+
+<main class="shell">
+<div class="top"><span class="ey">Analysis</span><h1>Here is what changed.</h1></div>
+
+<section id="drop"><span class="ey">Analyze a photo</span><h2>Which photo should we check?</h2>
+<form id="fm"><label>Edited photo<input id="fe" type="file" accept="image/*" required></label>
+<label>Original photo (optional, far more accurate)<input id="fo" type="file" accept="image/*"></label>
+<div><button class="pb dark" type="submit"><span>Analyze</span><b id="up"></b></button></div></form><p class="err" id="er" role="alert"></p></section>
+
+<div class="lay" id="lay" style="display:none">
+<aside class="fm" id="frame">
+<div class="bar"><span class="ey l">Photo</span><div class="seg" id="vs"><button class="on" data-v="edit">Edited</button><button data-v="orig" id="vo" disabled>Original</button></div></div>
+<div class="stage"><div class="pic"><img id="im" alt="Your edited photo"><canvas id="ov" hidden></canvas></div><div class="busy" id="bz"><i></i><span>Analyzing your photo…</span></div></div>
+<div class="meta"><span id="fn"></span><span id="fd"></span></div>
+</aside>
+
+<div>
+<p class="err" id="er2" role="alert" style="margin:0 0 1rem"></p>
+<div id="res">
+<div class="sum"><span class="ey l">Result</span><h2 id="rh"></h2>
+<div class="kp"><div><b id="kc">–</b><small>Confidence</small></div><div><b id="kr">–</b><small>Residual error</small></div><div><b id="kn">–</b><small>Sliders changed</small></div></div>
+<ul id="sn"></ul><p class="wr" id="wr"></p></div>
+
+<div class="tabs" role="tablist" id="tb"><button class="on" data-t="p">Parameters</button><button data-t="c">Curves</button><button data-t="h">Heat maps</button><button data-t="x">Download</button></div>
+
+<section class="pnl on" id="t-p"><div class="ph"><div><h3>Edit parameters</h3><p>Bars show the value; the soft band is the uncertainty.</p></div><label class="tg"><input type="checkbox" id="ch"> Changed only</label></div><div id="pl"></div></section>
+<section class="pnl" id="t-c"><div class="ph"><div><h3>Tone curves</h3><p>Input level (left to right) against output level, per channel.</p></div></div><canvas class="cv" id="cv" width="800" height="800"></canvas><div class="cc" id="cc"></div><p class="src" id="cs"></p></section>
+<section class="pnl" id="t-h"><div class="ph"><div><h3>Heat maps</h3><p>Click a map to overlay it on your photo.</p></div></div><div class="hg2" id="hg"></div><p class="hnt" id="hn"></p></section>
+<section class="pnl" id="t-x"><div class="ph"><div><h3>Download the edit</h3><p>Take the settings into your editor or keep a record.</p></div></div><ul id="xl"></ul></section>
+</div>
+</div>
+</div>
+</main>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const API=location.protocol.startsWith('http')?location.origin:'http://localhost:8000';
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+$('#lgo').innerHTML='<svg viewBox="0 0 48 48" fill="currentColor" style="font-size:1.25rem;color:#b15f2c"><path d="M24 2c2.2 13.8 7.9 19.6 22 22-14.1 2.4-19.8 8.2-22 22-2.2-13.8-7.9-19.6-22-22 14.1-2.4 19.8-8.2 22-22Z"/></svg>';
+$('#bk').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const AR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',DL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M6 11l6 6 6-6M5 20h14"/></svg>';
+$('#up').innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg>';
+
+/* ---------- hand-off from the home page ---------- */
+const idb=()=>new Promise((res,rej)=>{const q=indexedDB.open('ed-handoff',1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)});
+async function takeHandoff(){try{const db=await idb();return await new Promise(res=>{const t=db.transaction('f','readwrite'),s=t.objectStore('f'),a=s.get('edited'),b=s.get('original');s.clear();t.oncomplete=()=>{db.close();res({e:a.result,o:b.result})};t.onerror=()=>res({})})}catch{return{}}}
+
+/* ---------- state ---------- */
+let F={e:null,o:null},J=null,PX=null,CUR=null,CSRC='',URLS={},HM=[],MAPC={},curOn={r:1,g:1,b:1,l:1},overlay=null,base='edit';
+const LBL={Exposure2012:['Exposure','L'],Contrast2012:['Contrast','L'],Highlights2012:['Highlights','L'],Shadows2012:['Shadows','L'],Whites2012:['Whites','L'],Blacks2012:['Blacks','L'],
+IncrementalTemperature:['Temperature (relative)','C'],IncrementalTint:['Tint (relative)','C'],Vibrance:['Vibrance','C'],Saturation:['Saturation','C'],
+Texture:['Texture','D'],Clarity2012:['Clarity','D'],Dehaze:['Dehaze','D'],Sharpness:['Sharpness','D'],PostCropVignetteAmount:['Vignette','D']};
+const GN={L:'Light',C:'Color',D:'Detail and effects',O:'Other'};
+const fmt=(k,v)=>k==='Exposure2012'?(v>0?'+':'')+v.toFixed(2):(v>0?'+':'')+Math.round(v*10)/10;
+function download(name,data,type){const b=data instanceof Blob?data:new Blob([data],{type:type||'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+
+/* ---------- start ---------- */
+(async()=>{const h=await takeHandoff();if(h.e)start(h.e,h.o||null);else $('#drop').classList.add('on')})();
+$('#fm').onsubmit=e=>{e.preventDefault();const a=$('#fe').files[0];if(a){$('#drop').classList.remove('on');start(a,$('#fo').files[0]||null)}};
+
+async function start(e,o){F={e,o};J=null;$('#lay').style.display='';$('#res').classList.remove('on');$('#er2').textContent='';$('#bz').classList.add('on');
+['edit','orig'].forEach(k=>{if(URLS[k])URL.revokeObjectURL(URLS[k])});URLS={edit:URL.createObjectURL(e)};if(o)URLS.orig=URL.createObjectURL(o);
+$('#vo').disabled=!o;setView('edit');$('#fn').textContent=e.name;
+const im=$('#im');im.onload=()=>{$('#fd').textContent=im.naturalWidth+' × '+im.naturalHeight+' px'};
+const fd=new FormData();fd.append('edited',e);if(o)fd.append('original',o);
+const px=pixels(e,o).catch(()=>null);
+try{const r=await fetch(API+'/api/v1/analyze',{method:'POST',body:fd}),j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error?.message||'Request failed ('+r.status+')');J=j}
+catch(x){$('#bz').classList.remove('on');$('#er2').innerHTML=esc(x instanceof TypeError?'Could not reach the analyzer. Start it with: uvicorn app.main:app':x.message)+' &nbsp;<a href="analyze.html" style="text-decoration:underline">Try another photo</a>'}
+PX=await px;$('#bz').classList.remove('on');if(J)render()}
+
+function setView(v){base=v;$('#im').src=URLS[v]||URLS.edit;$$('#vs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v))}
+$('#vs').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled)setView(b.dataset.v)};
+
+/* ---------- pixels (browser side, never uploaded) ---------- */
+async function pixels(e,o){const bm=await createImageBitmap(e),w=Math.min(360,bm.width),h=Math.max(1,Math.round(w*bm.height/bm.width)),c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d',{willReadFrequently:true});
+x.drawImage(bm,0,0,w,h);const out={w,h,e:x.getImageData(0,0,w,h).data,o:null};
+if(o){const b2=await createImageBitmap(o);x.clearRect(0,0,w,h);x.drawImage(b2,0,0,w,h);out.o=x.getImageData(0,0,w,h).data;out.ar=Math.abs(b2.width/b2.height-bm.width/bm.height)}return out}
+const LU=(d,i)=>.2126*d[i]+.7152*d[i+1]+.0722*d[i+2];
+
+/* ---------- render ---------- */
+const HEAD={metadata:'Exact settings found',fitted:'Matched to the original',estimate:'Rough estimate'};
+function sentences(p){const g=k=>p[k]===undefined?0:Number(p[k]),o=[],e=g('Exposure2012'),c=g('Contrast2012'),s=g('Saturation'),w=g('IncrementalTemperature'),wd=a=>Math.abs(a)<25?'slightly':Math.abs(a)<60?'noticeably':'strongly';
+if(Math.abs(e)>=.15)o.push(`${e>0?'Brighter':'Darker'} by about ${Math.abs(e).toFixed(1)} stop${Math.abs(e)>=1.5?'s':''}`);
+if(Math.abs(c)>=10)o.push(`Contrast ${wd(c)} ${c>0?'increased':'reduced'}`);
+if(s<=-90)o.push('Converted to black and white');else if(Math.abs(s)>=10)o.push(`Colors ${wd(s)} ${s>0?'more vivid':'more muted'}`);
+if(Math.abs(w)>=15)o.push(w>0?'Warmer, more orange tones':'Cooler, more blue tones');
+if(g('Highlights2012')<=-30)o.push('Bright areas pulled down');if(g('Shadows2012')>=30)o.push('Dark areas lifted');if(g('PostCropVignetteAmount')<=-15)o.push('Corners darkened');
+return o.length?o:['Looks close to unedited']}
+
+function render(){const j=J,p=j.params||{};$('#res').classList.add('on');
+$('#rh').textContent=j.layer==='fitted'&&j.unrecognized_pipeline?'Partly explained':(HEAD[j.layer]||'Analysis complete');
+$('#kc').textContent=j.confidence!=null?Math.round(j.confidence*100)+'%':'–';
+$('#kr').textContent=typeof j.residual==='number'?j.residual.toFixed(3):'–';
+const nums=Object.entries(p).filter(([k,v])=>typeof v==='number');$('#kn').textContent=nums.filter(([k,v])=>Math.abs(v)>=(k==='Exposure2012'?.05:1)).length;
+$('#sn').innerHTML=sentences(p).map(t=>`<li class="chip">${esc(t)}</li>`).join('');
+$('#wr').innerHTML=[...(j.warnings||[]),...(j.unrecognized_pipeline?['Part of this edit could not be explained by the supported sliders.']:[])].map(esc).join('<br>');
+params();curves();heat();exportsUI()}
+
+function params(){const p=J.params||{},u=J.uncertainty||{},only=$('#ch').checked,G={L:[],C:[],D:[],O:[]};
+Object.entries(p).forEach(([k,v])=>{if(v!==null&&typeof v==='object')return;(G[(LBL[k]||[0,'O'])[1]]).push([k,v])});
+const ord=Object.keys(LBL);Object.values(G).forEach(a=>a.sort((x,y)=>(ord.indexOf(x[0])+1||99)-(ord.indexOf(y[0])+1||99)));
+$('#pl').innerHTML=Object.entries(G).filter(([g,a])=>a.length).map(([g,a])=>`<div class="grp"><h4>${GN[g]}</h4>${a.map(([k,v])=>{
+if(typeof v!=='number')return only?'':`<div class="txt"><span>${esc(k)}</span><span>${esc(v)}</span></div>`;
+const R=k==='Exposure2012'?5:100,z=Math.abs(v)<(k==='Exposure2012'?.05:1);if(only&&z)return'';
+const pc=Math.max(-1,Math.min(1,v/R))*50,s=u[k]!=null?Math.abs(u[k]):0,lo=Math.max(-50,pc-s/R*50),hi=Math.min(50,pc+s/R*50);
+return`<div class="pr${z?' z':''}"><span>${esc((LBL[k]||[k])[0])}</span><div class="tr">${s?`<i class="u" style="left:${50+lo}%;width:${hi-lo}%"></i>`:''}<i class="f" style="left:${50+Math.min(0,pc)}%;width:${Math.abs(pc)}%"></i></div><span class="v">${fmt(k,v)}${s?` <small>±${k==='Exposure2012'?s.toFixed(2):Math.round(s*10)/10}</small>`:''}</span></div>`}).join('')}</div>`).join('')||'<p class="src">No parameters returned.</p>'}
+$('#ch').onchange=()=>J&&params();
+
+/* ---------- curves ---------- */
+function toCurve(v){if(!Array.isArray(v)||v.length<2)return null;let pts;
+if(typeof v[0]==='number'){const m=Math.max(...v)>1.5?255:1;pts=v.map((y,i)=>[i/(v.length-1),y/m])}else{pts=v.map(q=>Array.isArray(q)?[+q[0],+q[1]]:[+q.x,+q.y]);if(Math.max(...pts.flat())>1.5)pts=pts.map(q=>[q[0]/255,q[1]/255])}
+pts.sort((a,b)=>a[0]-b[0]);return Array.from({length:256},(_,i)=>{const x=i/255;let k=0;while(k<pts.length-2&&pts[k+1][0]<x)k++;const a=pts[k],b=pts[k+1],t=b[0]===a[0]?0:Math.min(1,Math.max(0,(x-a[0])/(b[0]-a[0])));return a[1]+(b[1]-a[1])*t})}
+function serverCurves(j){const c=j.curves||j.tone_curves||j.tone_curve||j.toneCurves;if(!c)return null;const o={},al={r:'r',red:'r',g:'g',green:'g',b:'b',blue:'b',l:'l',luma:'l',lum:'l',luminance:'l',rgb:'l',master:'l',v:'l',value:'l'};
+if(Array.isArray(c)&&c.length===3&&Array.isArray(c[0]))['r','g','b'].forEach((k,i)=>{const t=toCurve(c[i]);if(t)o[k]=t});
+else if(typeof c==='object')for(const[k,v]of Object.entries(c)){const a=al[k.toLowerCase()],t=a&&toCurve(v&&(v.points||v.curve)||v);if(t)o[a]=t}
+return Object.keys(o).length?o:null}
+function matchCurves(){if(!PX||!PX.o)return null;const o={};[0,1,2,3].forEach(ch=>{const hs=[new Float64Array(256),new Float64Array(256)];[PX.o,PX.e].forEach((d,s)=>{for(let i=0;i<d.length;i+=4)hs[s][Math.round(ch===3?LU(d,i):d[i+ch])]++});
+const cd=h=>{let a=0,n=h.reduce((x,y)=>x+y,0);return Array.from(h,v=>(a+=v)/n)},co=cd(hs[0]),ce=cd(hs[1]);let j=0;
+o['rgbl'[ch]]=Array.from({length:256},(_,i)=>{while(j<255&&ce[j]<co[i])j++;return j/255})});return o}
+function curves(){const s=serverCurves(J),m=matchCurves();CUR=Object.assign({},m||{},s||{});if(!Object.keys(CUR).length)CUR=null;
+CSRC=s?'Curves from the analyzer.':m?'Computed in your browser by matching tone levels between the original and the edit.':'';
+const C={r:['Red','#d6453d'],g:['Green','#3f9a4f'],b:['Blue','#3b6fd8'],l:['Luma','#111']};
+$('#cc').innerHTML=CUR?Object.keys(C).filter(k=>CUR[k]).map(k=>`<button data-k="${k}" style="--c:${C[k][1]}" class="${curOn[k]?'':'off'}"><i></i>${C[k][0]}</button>`).join(''):'';
+$('#cs').textContent=CUR?CSRC:'No curves available. Add the original photo to compute them.';drawCurves()}
+$('#cc').onclick=e=>{const b=e.target.closest('button');if(b){curOn[b.dataset.k]=!curOn[b.dataset.k];b.classList.toggle('off');drawCurves()}};
+function drawCurves(){const c=$('#cv'),x=c.getContext('2d'),S=800,P=40,W=S-2*P,col={r:'#d6453d',g:'#3f9a4f',b:'#3b6fd8',l:'#111'};x.clearRect(0,0,S,S);x.fillStyle='#f1f0ee';x.fillRect(0,0,S,S);
+if(PX){const h=new Float64Array(256);for(let i=0;i<PX.e.length;i+=4)h[Math.round(LU(PX.e,i))]++;const m=Math.max(...h)||1;x.fillStyle='rgba(17,17,17,.1)';h.forEach((v,i)=>x.fillRect(P+i/256*W,S-P-v/m*W*.5,W/256+.5,v/m*W*.5))}
+x.strokeStyle='rgba(17,17,17,.12)';x.lineWidth=1;for(let i=0;i<=4;i++){const t=P+i*W/4;x.beginPath();x.moveTo(t,P);x.lineTo(t,S-P);x.moveTo(P,t);x.lineTo(S-P,t);x.stroke()}
+x.setLineDash([8,8]);x.strokeStyle='rgba(17,17,17,.35)';x.beginPath();x.moveTo(P,S-P);x.lineTo(S-P,P);x.stroke();x.setLineDash([]);
+if(CUR)Object.keys(col).forEach(k=>{if(!CUR[k]||!curOn[k])return;x.strokeStyle=col[k];x.lineWidth=4;x.lineJoin='round';x.beginPath();CUR[k].forEach((y,i)=>{const px=P+i/255*W,py=S-P-Math.min(1,Math.max(0,y))*W;i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke()});
+x.fillStyle='rgba(17,17,17,.5)';x.font='500 22px Onest,sans-serif';x.fillText('Input',S/2-24,S-10);x.save();x.translate(24,S/2+30);x.rotate(-Math.PI/2);x.fillText('Output',0,0);x.restore()}
+
+/* ---------- heat maps ---------- */
+const lerp=(a,b,t)=>a+(b-a)*t,hex=h=>[1,3,5].map(i=>parseInt(h.substr(i,2),16));
+const grad=(st,t)=>{t=Math.min(1,Math.max(0,t));const n=st.length-1,i=Math.min(n-1,Math.floor(t*n)),a=hex(st[i]),b=hex(st[i+1]),f=t*n-i;return a.map((v,k)=>lerp(v,b[k],f))};
+const INF=['#000004','#420a68','#932667','#dd513a','#fca50a','#fcffa4'],DIV=['#2f63c9','#a9c1ee','#e6e5e2','#f0b48a','#cf6a1f'];
+const css=st=>'linear-gradient(90deg,'+st.join(',')+')';
+function heat(){HM=[];const d=PX;if(!d){$('#hg').innerHTML='';$('#hn').textContent='Heat maps could not be computed for this image.';return}
+const e=d.e,N=d.w*d.h,def=[
+['lum','Brightness','Where the edited photo is light or dark.',i=>grad(INF,LU(e,i*4)/255),INF,'dark','light'],
+['sat','Saturation','Where color is strongest in the edit.',i=>{const r=e[i*4],g=e[i*4+1],b=e[i*4+2],m=Math.max(r,g,b);return grad(INF,m?(m-Math.min(r,g,b))/m:0)},INF,'gray','vivid'],
+['clip','Clipping','Red: highlights lost to white. Blue: shadows crushed to black.',i=>{const l=LU(e,i*4);return l>=250?[220,60,50]:l<=5?[50,100,220]:[l*.35+20,l*.35+20,l*.35+20]},['#2f63c9','#444444','#dc3c32'],'shadows','highlights'],
+['warm','Warmth','Orange where red outweighs blue, blue where it does not.',i=>grad(DIV,.5+(e[i*4]-e[i*4+2])/255),DIV,'cool','warm']];
+if(d.o)def.push(['diff','Change from original','Orange: brighter than the original. Blue: darker.',i=>grad(DIV,.5+Math.max(-1,Math.min(1,(LU(e,i*4)-LU(d.o,i*4))/255*2.5))/2),DIV,'darker','brighter']);
+$('#hg').innerHTML=def.map(([id,t,n,f,st,a,b])=>`<div class="hm" data-id="${id}" tabindex="0" role="button" aria-pressed="false"><canvas width="${d.w}" height="${d.h}"></canvas><button class="sv" aria-label="Download ${t} as PNG" title="Download PNG">${DL}</button><div><b>${t}</b><p>${n}</p><i class="lg" style="display:block;background:${css(st)}"></i><span class="lb"><span>${a}</span><span>${b}</span></span></div></div>`).join('');
+$$('#hg .hm').forEach((el,k)=>{const cv=el.querySelector('canvas'),x=cv.getContext('2d'),im=x.createImageData(d.w,d.h);for(let i=0;i<N;i++){const c=def[k][3](i);im.data[i*4]=c[0];im.data[i*4+1]=c[1];im.data[i*4+2]=c[2];im.data[i*4+3]=255}x.putImageData(im,0,0);MAPC[def[k][0]]=cv});
+$('#hn').textContent=d.o?(d.ar>.03?'The original has a different shape than the edit (cropped?), so the change map is only approximate.':'Change map assumes the original and the edit share the same framing.'):'Add the original photo to also get a change-from-original map.'}
+$('#hg').onclick=e=>{const s=e.target.closest('.sv'),el=e.target.closest('.hm');if(!el)return;const id=el.dataset.id;
+if(s){e.stopPropagation();MAPC[id].toBlob(b=>download(`${bn()}-${id}-heatmap.png`,b))}else toggleOv(id,el)};
+$('#hg').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){const el=e.target.closest('.hm');if(el&&e.target===el){e.preventDefault();toggleOv(el.dataset.id,el)}}};
+function toggleOv(id,el){const ov=$('#ov');$$('#hg .hm').forEach(h=>{h.classList.remove('on');h.setAttribute('aria-pressed','false')});
+if(overlay===id){overlay=null;ov.hidden=true;return}overlay=id;ov.width=MAPC[id].width;ov.height=MAPC[id].height;ov.getContext('2d').drawImage(MAPC[id],0,0);ov.hidden=false;el.classList.add('on');el.setAttribute('aria-pressed','true')}
+
+/* ---------- downloads ---------- */
+const bn=()=>(F.e?F.e.name.replace(/\.[^.]+$/,''):'photo')||'photo';
+const findExp=re=>{const x=J.exports||{};for(const[k,v]of Object.entries(x))if(re.test(k)&&typeof v==='string'&&v.length)return v;return null};
+function cube1d(){if(!CUR)return null;const f=k=>CUR[k]||CUR.l||CUR.r||[];const R=CUR.r||f('l'),G=CUR.g||f('l'),B=CUR.b||f('l');if(!R.length)return null;
+return`# Edit Detector 1D LUT (per-channel tone curves)\nTITLE "${bn()}"\nLUT_1D_SIZE 256\nDOMAIN_MIN 0 0 0\nDOMAIN_MAX 1 1 1\n`+R.map((_,i)=>[R[i],G[i],B[i]].map(v=>Math.min(1,Math.max(0,v)).toFixed(6)).join(' ')).join('\n')+'\n'}
+const csv=()=>'parameter,value,uncertainty\n'+Object.entries(J.params||{}).filter(([k,v])=>typeof v!=='object').map(([k,v])=>`${k},${v},${(J.uncertainty||{})[k]??''}`).join('\n')+'\n';
+const summary=()=>`Edit Detector — ${F.e.name}\n${$('#rh').textContent}, confidence ${$('#kc').textContent}\n\n`+sentences(J.params||{}).map(s=>'• '+s).join('\n')+'\n\n'+Object.entries(J.params||{}).filter(([k,v])=>typeof v==='number').map(([k,v])=>`${(LBL[k]||[k])[0].padEnd(24)}${fmt(k,v)}`).join('\n')+'\n';
+const jsonOut=()=>JSON.stringify({file:F.e.name,layer:J.layer,confidence:J.confidence,residual:J.residual,unrecognized_pipeline:J.unrecognized_pipeline,params:J.params,uncertainty:J.uncertainty,warnings:J.warnings},null,2);
+function exportsUI(){const xmp=J.exports?.xmp||null,cube=findExp(/cube|lut/i)||cube1d(),cubeNative=!!findExp(/cube|lut/i);
+const copy=async(t,b)=>{try{await navigator.clipboard.writeText(t);b.querySelector('h5').dataset.o=b.querySelector('h5').textContent;b.querySelector('h5').textContent='Copied'}catch{b.querySelector('h5').textContent='Copy failed'}setTimeout(()=>{const h=b.querySelector('h5');h.textContent=h.dataset.o},1500)};
+const A=[
+['Lightroom preset','Import into Lightroom or Camera Raw','.xmp',xmp&&(()=>download(bn()+'.xmp',xmp,'application/xml'))],
+['3D LUT',cubeNative?'For video tools and Photoshop':'1D LUT built from the tone curves','.cube',cube&&(()=>download(bn()+'.cube',cube))],
+['Settings as JSON','Every value with its uncertainty','.json',()=>download(bn()+'-settings.json',jsonOut(),'application/json')],
+['Settings as CSV','Open in Excel or Sheets','.csv',()=>download(bn()+'-settings.csv',csv(),'text/csv')],
+['Plain-text summary','Readable notes you can paste anywhere','.txt',()=>download(bn()+'-summary.txt',summary())],
+['Tone curves image','The curve chart as a picture','.png',CUR&&(()=>$('#cv').toBlob(b=>download(bn()+'-curves.png',b)))],
+['Copy preset','Put the XMP on your clipboard','copy',xmp&&(b=>copy(xmp,b))],
+['Copy settings','Put the JSON on your clipboard','copy',b=>copy(jsonOut(),b)]];
+$('#xl').innerHTML=A.map(([t,d,e],i)=>`<li><button class="row" data-i="${i}" ${A[i][3]?'':'disabled'}><span><h5>${t}</h5><p>${A[i][3]?d:'Not available for this result'}</p></span><em>${e}</em><span class="bg">${e==='copy'?AR:DL}</span></button></li>`).join('');
+$('#xl').onclick=e=>{const b=e.target.closest('.row');if(b&&!b.disabled)A[b.dataset.i][3](b)}}
+
+/* ---------- tabs ---------- */
+$('#tb').onclick=e=>{const b=e.target.closest('button');if(!b)return;$$('#tb button').forEach(x=>x.classList.toggle('on',x===b));$$('.pnl').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='c')drawCurves()};
+</script>
+</body>
+</html>
